@@ -19,6 +19,7 @@ module.exports = (app) => {
   const category_com = require("../contollers/category.controller");
   const fileupload = require("../contollers/fileupload.con");
   const orderproduct = require("../contollers/orderporoduct.controller");
+  const customer=require('../contollers/customer.con')
   //#region User route
   app.post("/register", (req, res) => {
     console.log("register data", req.body);
@@ -119,8 +120,18 @@ module.exports = (app) => {
   app.post("/orderproduct", orderproduct.orcreate);
   app.get("/orderfindone", orderproduct.orfindone);
   app.get("/orderfindall", orderproduct.orfindall);
+  app.get('/orderfindstatus',orderproduct.orfindstatus);
   app.delete('/orderdelete',orderproduct.ordelete);
   /*  app.post('/opupdate',orderproduct.opupdate);
       */
   //#endregion
+   //#region Customer
+   app.post("/customercreate", customer.create);
+   app.get("/customerfind", customer.findone);
+   app.get("/customerfindall", customer.findall);
+   
+   app.post('/customerupdate',customer.update);
+   /*  app.post('/opupdate',orderproduct.opupdate);
+       */
+   //#endregion
 };

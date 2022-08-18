@@ -1,6 +1,7 @@
 const CustomerModel = require("../models/Customer.model");
 const OrderProductModel = require("../models/order.product.model");
 const ShippingModel = require("../models/Shipping.model");
+const ObjectId = require("mongodb").ObjectId;
 
 exports.orcreate = async (req, res, next) => {
   console.log("OrderProduct", req.body);
@@ -13,22 +14,23 @@ exports.orcreate = async (req, res, next) => {
     //cid = await customerid(req, res);
     // shppid = shippingSaveAndGetId(req, res);
     const OrderProductData = new OrderProductModel({
-      orderdate: new Date(),
+      orderdate: req.body.orderdate,
       orderstatus: req.body.orderstatus,
-      
+      barcode: req.body.barcode,
       totalquantity: req.body.totalquantity,
       tax: req.body.tax,
-      deliveryprice:req.body.deliveryprice,
-      totalAmount:req.body.totalAmount,
-      discount:req.body.discount,
+      deliveryprice: req.body.deliveryprice,
+      totalAmount: req.body.totalAmount,
+      discount: req.body.discount,
       ShippingDate: new Date(),
       paymentmethod: req.body.paymentmethod,
       paymentstatus: req.body.paymentstatus,
       totalprofit: req.body.totalprofit,
+      customerid: req.body.customerid,
       delivery: {
-        title:req.body.title,
-        price:req.body.price,
-        estimateTime:req.body.estimateTime
+        title: req.body.title,
+        price: req.body.price,
+        estimateTime: req.body.estimateTime,
       },
       shippingaddress: {
         fullName: req.body.shippingaddress.fullName,
@@ -38,7 +40,7 @@ exports.orcreate = async (req, res, next) => {
         state: req.body.shippingaddress.state,
         postal: req.body.shippingaddress.postal,
         country: req.body.shippingaddress.country,
-        isDefault: true
+        isDefault: true,
       },
       //customerid: cid,
       Orderitem: arraypush(req.body.Orderitem),
@@ -131,9 +133,9 @@ exports.opupdate=(req,res,next) =>{
 
 }
  */
-exports.ordelete=async (req,res,next) =>{
+exports.ordelete = async (req, res, next) => {
   try {
-    const deleteorder = await OrderProductModel.deleteOne({_id:req.body.id});
+    const deleteorder = await OrderProductModel.deleteOne({ _id: req.body.id });
 
     if (!deleteorder) {
       return res.status(404);
@@ -142,5 +144,23 @@ exports.ordelete=async (req,res,next) =>{
   } catch (err) {
     res.status(500).send(error);
   }
-}
-
+};
+exports.orfindstatus = async (req, res) => {
+  try {
+    const cid = ObjectId.isValid(req.body.customerid);
+    console.log(cid);
+    if (cid) {
+      const findorder = await OrderProductModel.find({
+        orderstatus: req.body.orderstatus,
+        customerid:ObjectId(req.body.customerid)
+      }).exec((err,data)=>{
+        if(err)
+        res.status(500).send(err);
+        res.status(200).json({Order:data});
+      });
+     
+    } else res.send("cast err");
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};

@@ -3,7 +3,8 @@ const addressmodel = require("../models/address.model");
 //many to many relationa
 const OrderProductSchema = mongoose.Schema(
   {
-    orderdate: Date,
+    barcode:String,
+    orderdate: String,
     orderstatus: String,
     totalquantity: Number,
     tax: Number,
@@ -45,6 +46,7 @@ const OrderProductSchema = mongoose.Schema(
         profile: Number,
         itemStatus: String,
         expiredate: String,
+        image:String
       },
     ],
   },
