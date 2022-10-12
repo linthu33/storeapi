@@ -59,16 +59,112 @@ exports.createprod = (req, res, next) => {
     next();
   }
 };
-exports.findOneprod = (req, res, next) => {
+exports.findsubandtitleprod = (req, res, next) => {
+  
   try {
-    const findproduct = ProductModel.findOne(
-      { maincategory_id: "6261004fa7ddf84c05c3bff3" },
-      function (err, product) {
-        if (err) return res.status(500).json({ message: err });
+    ProductModel.find({$or:[
+      
+      {title:{$regex:req.params.query,$options: 'i'}},
+      {sublabel:{$regex:String(req.params.query),$options: 'i'}},
+      {"brand.name":{$regex:req.params.query,$options: 'i'}},
+     ]})
+   
+    .populate("pricetype")
+    .exec(function (err, data) {
+      if (err)
+        return res.status(500).send({
+          message: err.message,
+        });
+      
+      res.status(200).json({ product: data });
+    });
+   
+  } catch (err) {
+    res.status(500).json({
+      message: err,
+    });
+    next();
+  }
+};
 
-        return res.status(200).json({ product: product });
-      }
-    );
+exports.findidprod = (req, res, next) => {
+
+  try {
+    ProductModel.find({_id:req.params.id})
+   
+    .populate("pricetype")
+    .exec(function (err, data) {
+      if (err)
+        return res.status(500).send({
+          message: err.message,
+        });
+      res.status(200).json({ product: data });
+    });
+   
+  } catch (err) {
+    res.status(500).json({
+      message: err,
+    });
+    next();
+  }
+};
+exports.findOneprod = (req, res, next) => {
+
+  try {
+    ProductModel.find({maincategory_id:req.params.id})
+   
+    .populate("pricetype")
+    .exec(function (err, data) {
+      if (err)
+        return res.status(500).send({
+          message: err.message,
+        });
+      res.status(200).json({ product: data });
+    });
+   
+  } catch (err) {
+    res.status(500).json({
+      message: err,
+    });
+    next();
+  }
+};
+exports.GroupbyBarndprod = (req, res, next) => {
+
+  try {
+    ProductModel.aggregate([{
+      $group:{_id:"$brand.name"}
+    }])
+    .exec(function (err, data) {
+      if (err)
+        return res.status(500).send({
+          message: err.message,
+        });
+      res.status(200).json({ Brand: data });
+    });
+   
+  } catch (err) {
+    res.status(500).json({
+      message: err,
+    });
+    next();
+  }
+};
+exports.sortprod = (req, res, next) => {
+  console.log(req.params.query);
+  try {
+    const sortid=parseInt(req.params.query);
+    ProductModel.aggregate([{$sort:{"pricetype.sellprice":sortid}}])
+    .exec(function (err, data) {
+      if (err)
+        return res.status(500).send({
+          message: err.message,
+        });
+     
+      res.status(200).json({ product: data });
+    });
+    
+   
   } catch (err) {
     res.status(500).json({
       message: err,

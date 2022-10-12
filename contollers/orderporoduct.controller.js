@@ -26,7 +26,7 @@ exports.orcreate = async (req, res, next) => {
       paymentmethod: req.body.paymentmethod,
       paymentstatus: req.body.paymentstatus,
       totalprofit: req.body.totalprofit,
-      customerid: req.body.customerid,
+      customerid: req.body.customerId,
       delivery: {
         title: req.body.title,
         price: req.body.price,
@@ -122,7 +122,7 @@ exports.orfindall = async (req, res, next) => {
     if (!findorder) {
       return res.status(404);
     }
-    res.status(200).send(findorder);
+    res.status(200).send({ Order: findorder });
   } catch (err) {
     res.status(500).send(error);
   }

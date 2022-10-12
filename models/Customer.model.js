@@ -3,6 +3,8 @@ const moongoose = require("mongoose");
 const CustomerSchema = moongoose.Schema(
   {
     fullName: String,
+    email:String,
+    password:String,
     isDefault:String,
     address: [
       {
@@ -11,6 +13,8 @@ const CustomerSchema = moongoose.Schema(
         state: String,
         postal: String,
         country:String,
+        homenumber:String,
+        isDefault:String,
       }
     ],
    

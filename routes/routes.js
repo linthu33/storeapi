@@ -1,103 +1,50 @@
-const passport = require("passport");
-const passportConfig = require("../passport");
-const JWT = require("jsonwebtoken");
-const User = require("../models/User.model");
 
-const signToken = (userID) => {
-  return JWT.sign(
-    {
-      iss: "NoobCoder",
-      sub: userID,
-    },
-    "NoobCoder",
-    { expiresIn: "1h" }
-  );
-};
+const jwt = require("jsonwebtoken");
+const CustomerModel = require("../models/Customer.model");
+const taxModel = require("../models/tax.model");
 
 module.exports = (app) => {
   const product_com = require("../contollers/product.com");
   const category_com = require("../contollers/category.controller");
   const fileupload = require("../contollers/fileupload.con");
   const orderproduct = require("../contollers/orderporoduct.controller");
-  const customer=require('../contollers/customer.con')
+  const customercon = require("../contollers/customer.con");
+  const taxcon = require("../contollers/tax.controller");
+  const sellercon = require("../contollers/seller.controller");
   //#region User route
-  app.post("/register", (req, res) => {
-    console.log("register data", req.body);
-    const { username, password, role } = req.body;
-    User.findOne({ username }, (err, user) => {
-      if (err)
-        res
-          .status(500)
-          .json({ message: { msgBody: "Error has occured", msgError: true } });
-      if (user)
-        res.status(400).json({
-          message: { msgBody: "Username is already taken", msgError: true },
-        });
-      else {
-        const newUser = new User({ username, password, role });
-        newUser.save((err) => {
-          if (err)
-            res.status(500).json({
-              message: { msgBody: "Error has occured", msgError: true },
-            });
-          else
-            res.status(201).json({
-              message: {
-                msgBody: "Account successfully created",
-                msgError: false,
-              },
-            });
-        });
+
+  app.post("/register", customercon.create);
+  app.post("/login", async (req, res) => {
+    const password=req.body.password;
+    const email= req.body.email;
+      //const { email, password } = req.body;
+      const customer = await CustomerModel.findOne({
+        email
+      });
+      //console.log(customeruser)
+      if (!customer) {
+        return res.json({ message: "User doesn't exist" });
+      } else {
+        //console.log(customeruser.password);
+        if ( password !== customer.password) {
+         
+          return res.json({ message: "Password Incorrect" });
+        }
+        const payload = {
+         
+          customer 
+      };
+     // console.log(customeruser);
+      jwt.sign(payload, "secret", (err, token) => {
+          if (err) console.log(err);
+          else return res.json({ token: token,customer });
+      });
       }
-    });
+    /* } catch (err) {
+      return res.json({ message: err });
+    } */
   });
 
-  app.post(
-    "/login",
-    passport.authenticate("local", { session: false }),
-    (req, res) => {
-      if (req.isAuthenticated()) {
-        const { _id, username, role } = req.user;
-        const token = signToken(_id);
-        res.cookie("access_token", token, { httpOnly: true, sameSite: true });
-        res
-          .status(200)
-          .json({ isAuthenticated: true, user: { username, role } });
-      }
-    }
-  );
-  app.post(
-    "/logout",
-    passport.authenticate("jwt", { session: false }),
-    (req, res) => {
-      res.clearCookie("access_token");
-      res.json({ user: { username: "", role: "" }, success: true });
-    }
-  );
-  //for authentication
-  app.get(
-    "/admin",
-    passport.authenticate("jwt", { session: false }),
-    (req, res) => {
-      if (req.user.role === "admin") {
-        res
-          .status(200)
-          .json({ message: { msgBody: "You are an admin", msgError: false } });
-      } else
-        res.status(403).json({
-          message: { msgBody: "You're not an admin,go away", msgError: true },
-        });
-    }
-  );
-
-  app.get(
-    "/authenticated",
-    passport.authenticate("jwt", { session: false }),
-    (req, res) => {
-      const { username, role } = req.user;
-      res.status(200).json({ isAuthenticated: true, user: { username, role } });
-    }
-  );
   //#endregion
 
   //#region  upload image for product
@@ -107,31 +54,41 @@ module.exports = (app) => {
   app.post("/createcategory", category_com.create);
   app.get("/findOnecategory", category_com.findOne);
   app.get("/findAllcategory", category_com.findAll);
+  app.get("/tax", taxcon.findAlltax);
   //#endregion
   //#region Product Contoller
-  app.get("/findOneprod", product_com.findOneprod);
+  app.get("/findidprod/:id", product_com.findidprod);
+  app.get("/findOneprod/:id", product_com.findOneprod);
+  app.get("/findsubandtitleprod/:query", product_com.findsubandtitleprod);
+  app.get("/sortprod/:query", product_com.sortprod);
   app.get("/findAllprod", product_com.findAllprod);
   app.post("/createprod", product_com.createprod);
   app.post("/editprod", product_com.updateprod);
   app.delete("/deleteprod/:id", product_com.deleteprod);
-
+  app.get("/groupbybrand", product_com.GroupbyBarndprod);
+  
   //#endregion
   //#region Order to Product Route
   app.post("/orderproduct", orderproduct.orcreate);
   app.get("/orderfindone", orderproduct.orfindone);
   app.get("/orderfindall", orderproduct.orfindall);
-  app.get('/orderfindstatus',orderproduct.orfindstatus);
-  app.delete('/orderdelete',orderproduct.ordelete);
+  app.get("/orderfindstatus", orderproduct.orfindstatus);
+  app.delete("/orderdelete", orderproduct.ordelete);
   /*  app.post('/opupdate',orderproduct.opupdate);
-      */
+   */
   //#endregion
-   //#region Customer
-   app.post("/customercreate", customer.create);
-   app.get("/customerfind", customer.findone);
-   app.get("/customerfindall", customer.findall);
-   
-   app.post('/customerupdate',customer.update);
-   /*  app.post('/opupdate',orderproduct.opupdate);
-       */
-   //#endregion
+  //#region Customer
+
+  app.get("/customerfind", customercon.findone);
+  app.get("/customerfindall", customercon.findall);
+  
+  app.post("/customerupdate", customercon.update);
+  /*  app.post('/opupdate',orderproduct.opupdate);
+   */
+  //#endregion
+  app.get("/sellerall", sellercon.depFindall);
+  app.get("/sellerone/:query", sellercon.depFindone);
+  app.post("/sellercreate", sellercon.depCreate);
+  app.post("/sellerUpdate", sellercon.depUpdate); 
+  app.get("/sellerdelete/:id", sellercon.depDelete);
 };

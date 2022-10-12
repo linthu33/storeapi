@@ -1,18 +1,27 @@
 const CustomerModel = require("../models/Customer.model");
 exports.create = async (req, res, next) => {
   try {
-    const customeradata = new CustomerModel({
-      fullName: req.body.fullName,
-      isDefault: "",
-      address: arraypush(req.body.address),
-    });
-    await customeradata.save();
-    res.status(200).json({
-      message: "create sucessfully",
-      customer: customeradata,
-    });
+    console.log(req.body)
+    const { fullName,email,password,address } = req.body;
+    const userExits=await CustomerModel.findOne({email});
+    if(userExits){
+      return res.json({ message: "User already exists" });
+    }
+    else{
+      const customeradata = new CustomerModel({
+        fullName,
+        email,
+        password,
+        address: arraypush(address),
+      });
+      await customeradata.save();
+      return res.status(200).json({      
+        Customer: customeradata,
+      });
+    }
+    
   } catch (err) {
-    res.status(500).send("do not sucessfully");
+    res.status(500).send(err);
   }
 };
 exports.findone = async (req, res, next) => {
@@ -41,10 +50,12 @@ exports.findall = async (req, res, next) => {
 };
 exports.update = async (req, res, next) => {
   try {
+    console.log(req.body.password);
     const updatedata = await CustomerModel.findByIdAndUpdate(req.body.id, {
       fullName: req.body.fullName,
-      isDefault: "true",
-      address: {},
+      password:req.body.password,          
+      
+      address: arraypush(address),
     });
   } catch (err) {
     res.status(500).send(err);

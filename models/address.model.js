@@ -8,6 +8,6 @@ const AddressSchema=moongoose.Schema({
     state: String,
     postal: String,
     country: String,
-    //isDefault: true
+   // isDefault: String,
 })
 module.exports=moongoose.model("Address",AddressSchema);
